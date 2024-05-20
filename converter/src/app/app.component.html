@@ -1,0 +1,5 @@
+<div>
+  <h1>CSV to TXT file converter</h1>
+  <input type="file" (change)="onFileSelected($event)" accept=".csv" />
+  <button (click)="downloadTxtFile()" [disabled]="!parsedData">Download TXT</button>
+</div>
