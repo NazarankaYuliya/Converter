@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   parsedData: string | null = null;
@@ -22,7 +21,7 @@ export class AppComponent {
         this.parsedData = this.parseCsv(csvData);
       };
 
-      reader.readAsText(file);
+      reader.readAsText(file, 'ISO-8859-1');
     }
   }
 
@@ -33,7 +32,7 @@ export class AppComponent {
         const [pfandnummer, description, darlehen] = line.split(';');
         if (pfandnummer && description && darlehen) {
           return `${pfandnummer}\t${description}\t${parseFloat(
-            darlehen
+            darlehen.trim()
           ).toFixed(6)}`;
         }
         return null;
@@ -46,13 +45,20 @@ export class AppComponent {
 
   downloadTxtFile(): void {
     if (this.parsedData) {
-      const blob = new Blob([this.parsedData], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'output.txt';
-      a.click();
-      window.URL.revokeObjectURL(url);
+      const windows1252EncodedData = this.encodeToWindows1252(this.parsedData);
+      const blob = new Blob([windows1252EncodedData], {
+        type: 'text/plain;charset=windows-1252',
+      });
+      saveAs(blob, 'output_ansi.txt');
     }
+  }
+
+  encodeToWindows1252(input: string): Uint8Array {
+    const byteArray = new Uint8Array(input.length);
+    for (let i = 0; i < input.length; i++) {
+      const charCode = input.charCodeAt(i);
+      byteArray[i] = charCode < 256 ? charCode : 63;
+    }
+    return byteArray;
   }
 }
